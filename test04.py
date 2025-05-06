@@ -17,7 +17,7 @@ driver.get("https://korean.visitkorea.or.kr/kfes/list/wntyFstvlList.do")
 time.sleep(2)
 
 # ▣ 축제 리스트 충분히 로딩되도록 스크롤 내리기
-def scroll_until(min_count=10):
+def scroll_until(min_count=3):
     prev_height = driver.execute_script("return document.body.scrollHeight")
     while True:
         items = driver.find_elements(By.CSS_SELECTOR, "ul.other_festival_ul li a")
@@ -30,10 +30,10 @@ def scroll_until(min_count=10):
             break
         prev_height = new_height
 
-scroll_until(min_count=10)
+scroll_until(min_count=3)
 
 # ▣ 수집할 축제 수
-target_count = 10
+target_count = 3
 
 # ▣ 전체 축제 리스트 요소 수집
 festival_elements = driver.find_elements(By.CSS_SELECTOR, "ul.other_festival_ul li a")
@@ -63,10 +63,10 @@ for idx in range(min(target_count, len(festival_elements))):
                 return ""
 
         # ▣ 정보 수집 시작
-        name = get_text(".festival_title")
+        name = get_text("#festival_head")
         sub_title = get_text(".sub_title")
         content = get_text(".slide_content.fst")
-        detail = get_text("p.slide_content.lst")
+        detail = get_text(".slide_content.lst")
 
         try:
             poster_img = driver.find_element(By.CSS_SELECTOR, ".detail_img_box img").get_attribute("src")
@@ -78,16 +78,17 @@ for idx in range(min(target_count, len(festival_elements))):
         imgs = driver.find_elements(By.CSS_SELECTOR, ".swiper-slide a.imgClick")
         for img in imgs[:3]:
             style = img.get_attribute("style")
-            match = re.search(r'url\((https?://[^\s,)]+)', style)
+            match = re.search(r'url\(["\']?(https?://[^\s"\')]+)', style)
             image_links.append(match.group(1) if match else "")
         while len(image_links) < 3:
             image_links.append("")
 
         # ▣ 기타 정보
-        period = get_text("div.info_ico.data p.info_content")
-        address = get_text("div.info_ico.location p.info_content")
-        agency = get_text("div.info_ico.partner p.info_content")
-        contact = get_text("div.info_ico.tell p.info_content")
+        infos = driver.find_elements(By.CSS_SELECTOR, "p.info_content")
+        period = infos[0].text.strip() if len(infos) > 0 else ""
+        address = infos[1].text.strip() if len(infos) > 1 else ""
+        agency = infos[3].text.strip() if len(infos) > 3 else ""
+        contact = infos[4].text.strip() if len(infos) > 4 else ""
 
         # ▣ 데이터 저장
         festival_data.append([
@@ -108,7 +109,7 @@ for idx in range(min(target_count, len(festival_elements))):
         time.sleep(1)
 
 # ▣ CSV 저장
-with open("festival_detail_10_by_back.csv", "w", newline="", encoding="utf-8-sig") as f:
+with open("festival_detail_3_by_back.csv", "w", newline="", encoding="utf-8-sig") as f:
     writer = csv.writer(f)
     writer.writerow([
         "축제명", "간단한 소개", "내용글", "상세내용", "포스터 이미지",
